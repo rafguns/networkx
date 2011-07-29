@@ -1,66 +1,141 @@
+import tempfile
+import os
+
 from nose.tools import *
 
 import networkx as nx
 from networkx.utils.decorators import open_file,require
 
-def test_require_decorator():
+def test_require_decorator1():
     @require('os','sys')
     def test1():
         import os
         import sys
+    test1()
 
+def test_require_decorator2():
     @require('blahhh')
     def test2():
         import blahhh
+    assert_raises(nx.NetworkXError, test2)
 
-    test1()
-    assert_raises(nx.NetworkXError,
-                  test2)
+class TestOpenFileDecorator(object):
+    def setUp(self):
+        self.text = ['Blah... ', 'BLAH ', "BLAH!!!!"]
+        self.fobj = tempfile.NamedTemporaryFile('w+', delete=False)
+        self.name = self.fobj.name
 
-def test_open_file_decorator():
-    @open_file(0,'w')
-    def test_writer(path):
-        path.write("Blah... ")
-        path.write("BLAH ")
-        path.write("BLAH!!!! ")
+    def write(self, path):
+        for text in self.text:
+            path.write(text)
 
-    @open_file(0,'r')
-    def test_reader(path):
-        return path.readlines()
+    @open_file(1, 'r')
+    def read(self, path):
+        return path.readlines()[0]
 
-    test_writer("test.txt")
-    assert_equal(test_reader("test.txt")[0],
-                 'Blah... BLAH BLAH!!!! ')
+    @staticmethod
+    @open_file(0, 'w')
+    def writer_arg0(path):
+        path.write('demo')
 
-    fh = open("test.txt",'w')
-    test_writer(fh)
-    assert_false(fh.closed)
-    fh.close()
-    fh = open("test.txt",'r')
-    assert_equal(test_reader(fh)[0],
-                 'Blah... BLAH BLAH!!!! ')
-    assert_false(fh.closed)
+    @open_file(1, 'w+')
+    def writer_arg1(self, path):
+        self.write(path)
 
-    
-    @open_file(1,'w')
-    def test_writer1(a,path):
-        path.write("Blah... ")
-        path.write("BLAH ")
-        path.write("BLAH!!!! ")
+    @open_file(2, 'w')
+    def writer_arg2default(self, x, path=None):
+        if path is None:
+            fh = tempfile.NamedTemporaryFile(delete=False)
+            close_fh = True
+        else:
+            fh = path
+            close_fh = False
 
-    @open_file(1,'r')
-    def test_reader1(a,path):
-        return path.readlines()
+        try:
+            self.write(fh)
+        finally:
+            if close_fh:
+                fh.close()
 
-    test_writer1(None,"test.txt")
-    assert_equal(test_reader1(None,"test.txt")[0],
-                 'Blah... BLAH BLAH!!!! ')
+    @open_file(4, 'w')
+    def writer_arg4default(self, x, y, other='hello', path=None, **kwargs):
+        if path is None:
+            fh = tempfile.NamedTemporaryFile(delete=False)
+            close_fh = True
+        else:
+            fh = path
+            close_fh = False
 
-    fh = open("test.txt",'w')
-    test_writer1(None,fh)
-    assert_false(fh.closed)
-    fh.close()
-    fh = open("test.txt",'r')
-    assert_equal(test_reader1(None,fh)[0],
-                 'Blah... BLAH BLAH!!!! ')
-    assert_false(fh.closed)
+        try:
+            self.write(fh)
+        finally:
+            if close_fh:
+                fh.close()
+
+    @open_file('path', 'w')
+    def writer_kwarg(self, **kwargs):
+        path = kwargs.get('path', None)
+        if path is None:
+            fh = tempfile.NamedTemporaryFile(delete=False)
+            close_fh = True
+        else:
+            fh = path
+            close_fh = False
+
+        try:
+            self.write(fh)
+        finally:
+            if close_fh:
+                fh.close()
+
+
+    def test_writer_arg0_str(self):
+        self.writer_arg0(self.name)
+
+    def test_writer_arg0_fobj(self):
+        self.writer_arg0(self.fobj)
+
+    def test_writer_arg1_str(self):
+        self.writer_arg1(self.name)
+        assert_equal( self.read(self.name), ''.join(self.text) )
+
+    def test_writer_arg1_fobj(self):
+        self.writer_arg1(self.fobj)
+        assert_false(self.fobj.closed)
+        self.fobj.close()
+        assert_equal( self.read(self.name), ''.join(self.text) )
+
+    def test_writer_arg2default_str(self):
+        self.writer_arg2default(0, path=None)
+        self.writer_arg2default(0, path=self.name)
+        assert_equal( self.read(self.name), ''.join(self.text) )
+
+    def test_writer_arg2default_fobj(self):
+        self.writer_arg2default(0, path=self.fobj)
+        assert_false(self.fobj.closed)
+        self.fobj.close()
+        assert_equal( self.read(self.name), ''.join(self.text) )
+
+    def test_writer_arg2default_fobj(self):
+        self.writer_arg2default(0, path=None)
+
+    def test_writer_arg4default_fobj(self):
+        self.writer_arg4default(0, 1, dog='dog', other='other2')
+        self.writer_arg4default(0, 1, dog='dog', other='other2', path=self.name)
+        assert_equal( self.read(self.name), ''.join(self.text) )
+
+    def test_writer_kwarg_str(self):
+        self.writer_kwarg(path=self.name)
+        assert_equal( self.read(self.name), ''.join(self.text) )
+
+    def test_writer_kwarg_fobj(self):
+        self.writer_kwarg(path=self.fobj)
+        self.fobj.close()
+        assert_equal( self.read(self.name), ''.join(self.text) )
+
+    def test_writer_kwarg_fobj(self):
+        self.writer_kwarg(path=None)
+
+    def tearDown(self):
+        os.remove(self.name)
+
