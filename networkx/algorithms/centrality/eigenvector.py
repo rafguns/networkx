@@ -65,12 +65,10 @@ def eigenvector_centrality(G,max_iter=100,tol=1.0e-6,nstart=None):
     """
     from math import sqrt
     if type(G) == nx.MultiGraph or type(G) == nx.MultiDiGraph:
-        raise Exception(\
-            "eigenvector_centrality() not defined for multigraphs.")
+        raise nx.NetworkXException("Not defined for multigraphs.")
 
     if len(G)==0:
-        raise nx.NetworkXException(\
-            "eigenvector_centrality_numpy(): empty graph.")
+        raise nx.NetworkXException("Empty graph.")
 
     if nstart is None:
         # choose starting vector with entries of 1/len(G) 
@@ -84,7 +82,7 @@ def eigenvector_centrality(G,max_iter=100,tol=1.0e-6,nstart=None):
     # make up to max_iter iterations        
     for i in range(max_iter):
         xlast=x
-        x=dict.fromkeys(list(xlast.keys()),0)
+        x=dict.fromkeys(xlast, 0)
         # do the multiplication y=Ax
         for n in x:
             for nbr in G[n]:
@@ -92,6 +90,7 @@ def eigenvector_centrality(G,max_iter=100,tol=1.0e-6,nstart=None):
         # normalize vector
         try:
             s=1.0/sqrt(sum(v**2 for v in x.values()))
+        # this should never be zero?
         except ZeroDivisionError:
             s=1.0
         for n in x: x[n]*=s
@@ -141,25 +140,22 @@ def eigenvector_centrality_numpy(G):
     try:
         import numpy as np
     except ImportError:
-        raise ImportError(\
-            "eigenvector_centrality_numpy() requires NumPy: http://scipy.org/")
+        raise ImportError('Requires NumPy: http://scipy.org/')
 
     if type(G) == nx.MultiGraph or type(G) == nx.MultiDiGraph:
-        raise Exception(\
-            "eigenvector_centrality_numpy() not defined for multigraphs.")
+        raise nx.NetworkXException('Not defined for multigraphs.')
 
     if len(G)==0:
-        raise nx.NetworkXException(\
-            "eigenvector_centrality_numpy(): empty graph.")
+        raise nx.NetworkXException('Empty graph.')
 
     A=nx.adj_matrix(G,nodelist=G.nodes())
     eigenvalues,eigenvectors=np.linalg.eig(A)
     # eigenvalue indices in reverse sorted order
     ind=eigenvalues.argsort()[::-1]
     # eigenvector of largest eigenvalue at ind[0], normalized
-    largest=np.array(eigenvectors[:,ind[0]]).flatten()
+    largest=np.array(eigenvectors[:,ind[0]]).flatten().real
     norm=np.sign(largest.sum())*np.linalg.norm(largest)
-    centrality=dict(zip(G,largest/norm))
+    centrality=dict(zip(G,map(float,largest/norm)))
     return centrality
 
 
@@ -168,5 +164,6 @@ def setup_module(module):
     from nose import SkipTest
     try:
         import numpy
+        import numpy.linalg
     except:
         raise SkipTest("numpy not available")

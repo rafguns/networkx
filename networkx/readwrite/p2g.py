@@ -31,76 +31,74 @@ edges. Observe that node labeled "c" has an outgoing edge to
 itself. Indeed, self-loops are allowed. Node index starts from 0.
 
 """
-__author__ = """Willem Ligtenberg (w.p.a.ligtenberg@tue.nl)\n Aric Hagberg (hagberg@lanl.gov)"""
-__date__ = """2008-05-27"""
-#    Copyright (C) 2008 by 
+#    Copyright (C) 2008-2012 by 
 #    Aric Hagberg <hagberg@lanl.gov>
 #    Dan Schult <dschult@colgate.edu>
 #    Pieter Swart <swart@lanl.gov>
 #    All rights reserved.
 #    BSD license.
-
 import networkx
-from networkx.utils import is_string_like,get_file_handle
+from networkx.utils import is_string_like,open_file
+__author__ = '\n'.join(['Willem Ligtenberg (w.p.a.ligtenberg@tue.nl)',
+                      'Aric Hagberg (aric.hagberg@gmail.com)'])
 
-def write_p2g(G, path):
+@open_file(1,mode='w')
+def write_p2g(G, path, encoding = 'utf-8'):
     """Write NetworkX graph in p2g format.
 
+    Notes
+    -----
     This format is meant to be used with directed graphs with
     possible self loops.
     """
-    fh=get_file_handle(path,mode='w')
-
-    fh.write("%s\n"%G.name)
-    fh.write("%s %s\n"%(G.order(),G.size()))
-
+    path.write(("%s\n"%G.name).encode(encoding))
+    path.write(("%s %s\n"%(G.order(),G.size())).encode(encoding))
     nodes = G.nodes()
-
     # make dictionary mapping nodes to integers
     nodenumber=dict(zip(nodes,range(len(nodes)))) 
-
     for n in nodes:
-        fh.write("%s\n"%n)
+        path.write(("%s\n"%n).encode(encoding))
         for nbr in G.neighbors(n):
-            fh.write("%s "%nodenumber[nbr])
-        fh.write("\n")
-    fh.close()
+            path.write(("%s "%nodenumber[nbr]).encode(encoding))
+        path.write("\n".encode(encoding))
 
-def read_p2g(path):
+@open_file(0,mode='r')
+def read_p2g(path, encoding='utf-8'):
     """Read graph in p2g format from path. 
 
-    Returns an MultiDiGraph.
+    Returns
+    -------
+    MultiDiGraph
 
+    Notes
+    -----
     If you want a DiGraph (with no self loops allowed and no edge data)
     use D=networkx.DiGraph(read_p2g(path))
     """
-    fh=get_file_handle(path,mode='r')        
-    G=parse_p2g(fh)
+    lines = (line.decode(encoding) for line in path)
+    G=parse_p2g(lines)
     return G
 
 def parse_p2g(lines):
     """Parse p2g format graph from string or iterable. 
 
-    Returns an MultiDiGraph.
+    Returns
+    -------
+    MultiDiGraph
     """
-    if is_string_like(lines): lines=iter(lines.split('\n'))
-    lines = iter([line.rstrip('\n') for line in lines])
-
-    description = lines.next()
+    description = next(lines).strip()
     # are multiedges (parallel edges) allowed?
     G=networkx.MultiDiGraph(name=description,selfloops=True)
-    nnodes,nedges=map(int,lines.next().split())
-
+    nnodes,nedges=map(int,next(lines).split())
     nodelabel={}
     nbrs={}
     # loop over the nodes keeping track of node labels and out neighbors
     # defer adding edges until all node labels are known
     for i in range(nnodes):
-        n=lines.next()
+        n=next(lines).strip()
         nodelabel[i]=n
         G.add_node(n)
-        nbrs[n]=map(int,lines.next().split())
-
+        nbrs[n]=map(int,next(lines).split())
     # now we know all of the node labels so we can add the edges
     # with the correct labels        
     for n in G:

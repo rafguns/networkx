@@ -286,7 +286,7 @@ def gnm_random_graph(n, m, seed=None, directed=False):
     return G
 
 
-def newman_watts_strogatz_graph(n, k, p, create_using=None, seed=None):
+def newman_watts_strogatz_graph(n, k, p, seed=None):
     """Return a Newman-Watts-Strogatz small world graph.
 
     Parameters
@@ -297,8 +297,6 @@ def newman_watts_strogatz_graph(n, k, p, create_using=None, seed=None):
         Each node is connected to k nearest neighbors in ring topology
     p : float 
         The probability of adding a new edge for each edge
-    create_using : graph, optional (default Graph)
-        The graph instance used to build the graph.
     seed : int, optional        
        seed for random number generator (default=None)
 
@@ -326,9 +324,7 @@ def newman_watts_strogatz_graph(n, k, p, create_using=None, seed=None):
         random.seed(seed)
     if k>=n // 2: 
         raise nx.NetworkXError("k>=n/2, choose smaller k or larger n")
-    if create_using is not None and create_using.is_directed():
-        raise nx.NetworkXError("Directed Graph not supported")
-    G=empty_graph(n,create_using)
+    G=empty_graph(n)
     G.name="newman_watts_strogatz_graph(%s,%s,%s)"%(n,k,p)
     nlist = G.nodes()
     fromv = nlist
@@ -351,7 +347,7 @@ def newman_watts_strogatz_graph(n, k, p, create_using=None, seed=None):
     return G            
 
 
-def watts_strogatz_graph(n, k, p, create_using=None, seed=None):
+def watts_strogatz_graph(n, k, p, seed=None):
     """Return a Watts-Strogatz small-world graph.
 
 
@@ -363,8 +359,6 @@ def watts_strogatz_graph(n, k, p, create_using=None, seed=None):
         Each node is connected to k nearest neighbors in ring topology
     p : float 
         The probability of rewiring each edge 
-    create_using : graph, optional (default Graph)
-        The graph instance used to build the graph.
     seed : int, optional        
         Seed for random number generator (default=None)
 
@@ -394,17 +388,10 @@ def watts_strogatz_graph(n, k, p, create_using=None, seed=None):
     """
     if k>=n/2: 
         raise nx.NetworkXError("k>=n/2, choose smaller k or larger n")
-    if create_using is None:
-        G = nx.Graph()
-    elif create_using.is_directed():
-        raise nx.NetworkXError("Directed Graph not supported")
-    else:
-        G = create_using
-        G.clear()
-
     if seed is not None:
         random.seed(seed)
 
+    G = nx.Graph()
     G.name="watts_strogatz_graph(%s,%s,%s)"%(n,k,p)
     nodes = list(range(n)) # nodes are labeled 0 to n-1
     # connect each node to k/2 neighbors
@@ -427,7 +414,7 @@ def watts_strogatz_graph(n, k, p, create_using=None, seed=None):
                 G.add_edge(u,w)
     return G            
 
-def connected_watts_strogatz_graph(n, k, p, tries=100, create_using=None, seed=None):
+def connected_watts_strogatz_graph(n, k, p, tries=100, seed=None):
     """Return a connected Watts-Strogatz small-world graph.
 
     Attempt to generate a connected realization by repeated 
@@ -444,8 +431,6 @@ def connected_watts_strogatz_graph(n, k, p, tries=100, create_using=None, seed=N
         The probability of rewiring each edge 
     tries : int
         Number of attempts to generate a connected graph.  
-    create_using : graph, optional (default Graph)
-        The graph instance used to build the graph.
     seed : int, optional
          The seed for random number generator.
 
@@ -455,17 +440,17 @@ def connected_watts_strogatz_graph(n, k, p, tries=100, create_using=None, seed=N
     watts_strogatz_graph()
 
     """
-    G = watts_strogatz_graph(n, k, p, create_using, seed)
+    G = watts_strogatz_graph(n, k, p, seed)
     t=1
     while not nx.is_connected(G):
-        G = watts_strogatz_graph(n, k, p, create_using, seed)
+        G = watts_strogatz_graph(n, k, p, seed)
         t=t+1
         if t>tries:
             raise nx.NetworkXError("Maximum number of tries exceeded")
     return G
 
 
-def random_regular_graph(d, n, create_using=None, seed=None):
+def random_regular_graph(d, n, seed=None):
     """Return a random regular graph of n nodes each with degree d.
     
     The resulting graph G has no self-loops or parallel edges.
@@ -476,15 +461,12 @@ def random_regular_graph(d, n, create_using=None, seed=None):
       Degree
     n : integer
       Number of nodes. The value of n*d must be even.
-    create_using : graph, optional (default Graph)
-        The graph instance used to build the graph.
     seed : hashable object
         The seed for random number generator.
 
     Notes
     -----
     The nodes are numbered form 0 to n-1.
-
 
     Kim and Vu's paper [2]_ shows that this algorithm samples in an
     asymptotically uniform way from the space of random graphs when
@@ -508,14 +490,6 @@ def random_regular_graph(d, n, create_using=None, seed=None):
 
     if not 0 <= d < n:
         raise nx.NetworkXError("the 0 <= d < n inequality must be satisfied")
-
-    if create_using is None:
-        G = nx.Graph()
-    elif create_using.is_directed():
-        raise nx.NetworkXError("Directed Graph not supported")
-    else:
-        G = create_using
-        G.clear()
 
     if seed is not None:
         random.seed(seed)
@@ -572,6 +546,7 @@ def random_regular_graph(d, n, create_using=None, seed=None):
     while edges is None:
         edges = _try_creation()
     
+    G = nx.Graph()
     G.name = "random_regular_graph(%s, %s)" % (d, n)
     G.add_edges_from(edges)
 
@@ -589,7 +564,7 @@ def _random_subset(seq,m):
         targets.add(x)
     return targets
     
-def barabasi_albert_graph(n, m, create_using=None, seed=None):
+def barabasi_albert_graph(n, m, seed=None):
     """Return random graph using Barabási-Albert preferential attachment model.
         
     A graph of n nodes is grown by attaching new nodes each with m
@@ -602,8 +577,6 @@ def barabasi_albert_graph(n, m, create_using=None, seed=None):
         Number of nodes
     m : int
         Number of edges to attach from a new node to existing nodes
-    create_using : graph, optional (default Graph)
-        The graph instance used to build the graph.
     seed : int, optional
         Seed for random number generator (default=None).   
 
@@ -624,15 +597,11 @@ def barabasi_albert_graph(n, m, create_using=None, seed=None):
     if m < 1 or  m >=n:
         raise nx.NetworkXError(\
               "Barabási-Albert network must have m>=1 and m<n, m=%d,n=%d"%(m,n))
-
-    if create_using is not None and create_using.is_directed():
-        raise nx.NetworkXError("Directed Graph not supported")
-
     if seed is not None:
         random.seed(seed)    
 
     # Add m initial nodes (m0 in barabasi-speak) 
-    G=empty_graph(m,create_using)  
+    G=empty_graph(m)
     G.name="barabasi_albert_graph(%s,%s)"%(n,m)
     # Target nodes for new edges
     targets=list(range(m))
@@ -653,7 +622,7 @@ def barabasi_albert_graph(n, m, create_using=None, seed=None):
         source += 1
     return G
 
-def powerlaw_cluster_graph(n, m, p, create_using=None, seed=None):
+def powerlaw_cluster_graph(n, m, p, seed=None):
     """Holme and Kim algorithm for growing graphs with powerlaw
     degree distribution and approximate average clustering. 
 
@@ -665,8 +634,6 @@ def powerlaw_cluster_graph(n, m, p, create_using=None, seed=None):
         the number of random edges to add for each new node
     p : float,
         Probability of adding a triangle after adding a random edge
-    create_using : graph, optional (default Graph)
-        The graph instance used to build the graph.
     seed : int, optional
         Seed for random number generator (default=None).   
       
@@ -702,14 +669,10 @@ def powerlaw_cluster_graph(n, m, p, create_using=None, seed=None):
     if p > 1 or p < 0:
         raise nx.NetworkXError(\
               "NetworkXError p must be in [0,1], p=%f"%(p))
-
-    if create_using is not None and create_using.is_directed():
-        raise nx.NetworkXError("Directed Graph not supported")
-
     if seed is not None:
         random.seed(seed)    
 
-    G=empty_graph(m,create_using) # add m initial nodes (m0 in barabasi-speak)
+    G=empty_graph(m) # add m initial nodes (m0 in barabasi-speak)
     G.name="Powerlaw-Cluster Graph"
     repeated_nodes=G.nodes()  # list of existing nodes to sample from
                            # with nodes repeated once for each adjacent edge 
@@ -742,7 +705,7 @@ def powerlaw_cluster_graph(n, m, p, create_using=None, seed=None):
         source += 1
     return G
 
-def random_lobster(n, p1, p2, create_using=None, seed=None):
+def random_lobster(n, p1, p2, seed=None):
     """Return a random lobster.
 
      A lobster is a tree that reduces to a caterpillar when pruning all
@@ -759,8 +722,6 @@ def random_lobster(n, p1, p2, create_using=None, seed=None):
         Probability of adding an edge to the backbone
     p2 : float
         Probability of adding an edge one level beyond backbone
-    create_using : graph, optional (default Graph)
-        The graph instance used to build the graph.
     seed : int, optional
         Seed for random number generator (default=None).   
     """
@@ -768,9 +729,7 @@ def random_lobster(n, p1, p2, create_using=None, seed=None):
     if seed is not None:
         random.seed(seed)
     llen=int(2*random.random()*n + 0.5)
-    if create_using is not None and create_using.is_directed():
-        raise nx.NetworkXError("Directed Graph not supported")
-    L=path_graph(llen,create_using)
+    L=path_graph(llen)
     L.name="random_lobster(%d,%s,%s)"%(n,p1,p2)
     # build caterpillar: add edges to path graph with probability p1
     current_node=llen-1
@@ -783,7 +742,7 @@ def random_lobster(n, p1, p2, create_using=None, seed=None):
                 L.add_edge(current_node-1,current_node)
     return L # voila, un lobster!
 
-def random_shell_graph(constructor, create_using=None, seed=None):
+def random_shell_graph(constructor, seed=None):
     """Return a random shell graph for the constructor given.
 
     Parameters
@@ -797,8 +756,6 @@ def random_shell_graph(constructor, create_using=None, seed=None):
     d : float
         The ratio of inter-shell (next) edges to intra-shell edges.
         d=0 means no intra shell edges, d=1 for the last shell
-    create_using : graph, optional (default Graph)
-        The graph instance used to build the graph.
     seed : int, optional
         Seed for random number generator (default=None).   
       
@@ -808,9 +765,7 @@ def random_shell_graph(constructor, create_using=None, seed=None):
     >>> G=nx.random_shell_graph(constructor)        
 
     """
-    if create_using is not None and create_using.is_directed():
-        raise nx.NetworkXError("Directed Graph not supported")
-    G=empty_graph(0,create_using)
+    G=empty_graph(0)
     G.name="random_shell_graph(constructor)"
 
     if seed is not None:
@@ -847,7 +802,7 @@ def random_shell_graph(constructor, create_using=None, seed=None):
     return G
 
 
-def random_powerlaw_tree(n, gamma=3, create_using=None, seed=None, tries=100):
+def random_powerlaw_tree(n, gamma=3, seed=None, tries=100):
     """Return a tree with a powerlaw degree distribution.
 
     Parameters
@@ -856,8 +811,6 @@ def random_powerlaw_tree(n, gamma=3, create_using=None, seed=None, tries=100):
         The number of nodes
     gamma : float
         Exponent of the power-law
-    create_using : graph, optional (default Graph)
-        The graph instance used to build the graph.
     seed : int, optional
         Seed for random number generator (default=None).   
     tries : int
@@ -879,7 +832,7 @@ def random_powerlaw_tree(n, gamma=3, create_using=None, seed=None, tries=100):
     except:
         raise nx.NetworkXError(\
               "Exceeded max (%d) attempts for a valid tree sequence."%tries)
-    G=degree_sequence_tree(s,create_using)
+    G=degree_sequence_tree(s)
     G.name="random_powerlaw_tree(%s,%s)"%(n,gamma)
     return G
 

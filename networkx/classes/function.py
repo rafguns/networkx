@@ -1,11 +1,6 @@
+"""Functional interface to graph methods and assorted utilities.
 """
-Functional interface to graph methods and assorted utilities.
-
-"""
-__author__ = """\n""".join(['Aric Hagberg (hagberg@lanl.gov)',
-                           'Pieter Swart (swart@lanl.gov)',
-                           'Dan Schult(dschult@colgate.edu)'])
-#    Copyright (C) 2004-2010 by
+#    Copyright (C) 2004-2012 by
 #    Aric Hagberg <hagberg@lanl.gov>
 #    Dan Schult <dschult@colgate.edu>
 #    Pieter Swart <swart@lanl.gov>
@@ -13,16 +8,16 @@ __author__ = """\n""".join(['Aric Hagberg (hagberg@lanl.gov)',
 #    BSD license.
 #
 import networkx as nx
-
-# functional style helpers
-
-
+__author__ = """\n""".join(['Aric Hagberg (hagberg@lanl.gov)',
+                           'Pieter Swart (swart@lanl.gov)',
+                           'Dan Schult(dschult@colgate.edu)'])
 __all__ = ['nodes', 'edges', 'degree', 'degree_histogram', 'neighbors',
            'number_of_nodes', 'number_of_edges', 'density',
            'nodes_iter', 'edges_iter', 'is_directed','info',
            'freeze','is_frozen','subgraph','create_empty_copy',
            'set_node_attributes','get_node_attributes',
-           'set_edge_attributes','get_edge_attributes']
+           'set_edge_attributes','get_edge_attributes',
+           'all_neighbors','non_neighbors']
 
 def nodes(G):
     """Return a copy of the graph nodes in a list."""
@@ -90,7 +85,6 @@ def density(G):
     The density is 0 for an graph without edges and 1.0 for a complete graph.
 
     The density of multigraphs can be higher than 1.
-
     """
     n=number_of_nodes(G)
     m=number_of_edges(G)
@@ -135,7 +129,10 @@ def is_directed(G):
 
 
 def freeze(G):
-    """Modify graph to prevent addition of nodes or edges.
+    """Modify graph to prevent further change by adding or removing
+    nodes or edges.
+
+    Node and edge data can still be modified.
 
     Parameters
     -----------
@@ -155,14 +152,17 @@ def freeze(G):
 
     Notes
     -----
-    This does not prevent modification of edge data.
+    To "unfreeze" a graph you must make a copy by creating a new graph object:
 
-    To "unfreeze" a graph you must make a copy.
+    >>> graph = nx.path_graph(4)
+    >>> frozen_graph = nx.freeze(graph)
+    >>> unfrozen_graph = nx.Graph(frozen_graph)
+    >>> nx.is_frozen(unfrozen_graph)
+    False
 
     See Also
     --------
     is_frozen
-
     """
     def frozen(*args):
         raise nx.NetworkXError("Frozen graph can't be modified")
@@ -214,7 +214,6 @@ def subgraph(G, nbunch):
     Notes
     -----
     subgraph(G) calls G.subgraph()
-
     """
     return G.subgraph(nbunch)
 
@@ -283,7 +282,7 @@ def set_node_attributes(G,name,attributes):
     Parameters
     ----------
     G : NetworkX Graph
-    
+
     name : string
        Attribute name
 
@@ -307,7 +306,7 @@ def get_node_attributes(G,name):
     Parameters
     ----------
     G : NetworkX Graph
-    
+
     name : string
        Attribute name
 
@@ -332,7 +331,7 @@ def set_edge_attributes(G,name,attributes):
     Parameters
     ----------
     G : NetworkX Graph
-    
+
     name : string
        Attribute name
 
@@ -342,10 +341,10 @@ def set_edge_attributes(G,name,attributes):
     Examples
     --------
     >>> G=nx.path_graph(3)
-    >>> bb=nx.edge_betweenness_centrality(G)
+    >>> bb=nx.edge_betweenness_centrality(G, normalized=False)
     >>> nx.set_edge_attributes(G,'betweenness',bb)
     >>> G[1][2]['betweenness']
-    4.0
+    2.0
     """
     for (u,v),value in attributes.items():
         G[u][v][name]=value
@@ -356,7 +355,7 @@ def get_edge_attributes(G,name):
     Parameters
     ----------
     G : NetworkX Graph
-    
+
     name : string
        Attribute name
 
@@ -373,3 +372,49 @@ def get_edge_attributes(G,name):
     'red'
     """
     return dict( ((u,v),d[name]) for u,v,d in G.edges(data=True) if name in d)
+
+
+def all_neighbors(graph, node):
+    """ Returns all of the neighbors of a node in the graph.
+
+    If the graph is directed returns predecessors as well as successors.
+
+    Parameters
+    ----------
+    graph : NetworkX graph
+        Graph to find neighbors.
+
+    node : node
+        The node whose neighbors will be returned.
+
+    Returns
+    -------
+    neighbors : iterator
+        Iterator of neighbors
+    """
+    if graph.is_directed():
+        values = itertools.chain.from_iterable([graph.predecessors_iter(node),
+                                                graph.successors_iter(node)])
+    else:
+        values = graph.neighbors_iter(node)
+
+    return values
+
+def non_neighbors(graph, node):
+    """Returns the non-neighbors of the node in the graph.
+
+    Parameters
+    ----------
+    graph : NetworkX graph
+        Graph to find neighbors.
+
+    node : node
+        The node whose neighbors will be returned.
+
+    Returns
+    -------
+    non_neighbors : iterator
+        Iterator of nodes in the graph that are not neighbors of the node.
+    """
+    nbors = set(neighbors(graph, node)) | set([node])
+    return (nnode for nnode in graph if nnode not in nbors)

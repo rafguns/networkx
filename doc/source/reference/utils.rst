@@ -8,6 +8,7 @@ Utilities
 Helper functions
 ----------------
 
+.. automodule:: networkx.utils.misc
 .. autosummary::
    :toctree: generated/
 
@@ -15,10 +16,14 @@ Helper functions
    flatten
    iterable
    is_list_of_ints
-   get_file_handle
+   make_str
+   cumulative_sum
+   generate_unique_node
+   default_opener
 
 Data structures and Algorithms
 ------------------------------
+.. automodule:: networkx.utils.union_find
 .. autosummary::
    :toctree: generated/
 
@@ -26,30 +31,31 @@ Data structures and Algorithms
 
 Random sequence generators
 --------------------------
+.. automodule:: networkx.utils.random_sequence
 .. autosummary::
    :toctree: generated/
 
+   create_degree_sequence
    pareto_sequence
    powerlaw_sequence
    uniform_sequence
    cumulative_distribution
    discrete_sequence
    zipf_sequence
-
-SciPy random sequence generators
-----------------------------------
-.. autosummary::
-   :toctree: generated/
-
-   scipy_pareto_sequence
-   scipy_powerlaw_sequence
-   scipy_poisson_sequence
-   scipy_uniform_sequence
-   scipy_discrete_sequence
-
-Random number generators
-------------------------
-.. autosummary::
-   :toctree: generated/
-
    zipf_rv
+   random_weighted_sample
+   weighted_choice
+
+
+
+Decorators
+----------
+.. automodule:: networkx.utils.decorators
+.. autosummary::
+   :toctree: generated/
+
+   open_file
+   require
+
+
+

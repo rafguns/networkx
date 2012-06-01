@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from nose.tools import *
 from nose import SkipTest
+from nose.plugins.attrib import attr
 import networkx
 
 # Example from
@@ -41,6 +42,7 @@ class TestHITS:
         nstart = dict([(i, 1./2) for i in G])
         h, a = networkx.hits(G, nstart = nstart)
 
+    @attr('numpy')
     def test_hits_numpy(self):
         try:
             import numpy as np
@@ -70,3 +72,15 @@ class TestHITS:
             assert_almost_equal(a[n],G.a[n],places=4)
 
 
+    @attr('numpy')
+    def test_empty(self):
+        try:
+            import numpy
+        except ImportError:
+            raise SkipTest('numpy not available.')
+        G=networkx.Graph()
+        assert_equal(networkx.hits(G),({},{}))
+        assert_equal(networkx.hits_numpy(G),({},{}))
+        assert_equal(networkx.hits_scipy(G),({},{}))
+        assert_equal(networkx.authority_matrix(G).shape,(0,0))
+        assert_equal(networkx.hub_matrix(G).shape,(0,0))

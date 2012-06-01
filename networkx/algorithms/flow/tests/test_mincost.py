@@ -154,24 +154,24 @@ class TestNetworkSimplex:
         G.add_edge('s', 1, capacity=12)
         G.add_edge('s', 2, capacity=6)
         G.add_edge('s', 3, capacity=14)
-        G.add_edge(1, 2, capacity=11)
-        G.add_edge(2, 3, capacity=9)
-        G.add_edge(1, 4, capacity=5)
-        G.add_edge(1, 5, capacity=2)
-        G.add_edge(2, 5, capacity=4)
-        G.add_edge(2, 6, capacity=2)
-        G.add_edge(3, 6, capacity=31)
-        G.add_edge(4, 5, capacity=18)
-        G.add_edge(5, 5, capacity=9)
+        G.add_edge(1, 2, capacity=11, weight=4)
+        G.add_edge(2, 3, capacity=9, weight=6)
+        G.add_edge(1, 4, capacity=5, weight=5)
+        G.add_edge(1, 5, capacity=2, weight=12)
+        G.add_edge(2, 5, capacity=4, weight=4)
+        G.add_edge(2, 6, capacity=2, weight=6)
+        G.add_edge(3, 6, capacity=31, weight=3)
+        G.add_edge(4, 5, capacity=18, weight=4)
+        G.add_edge(5, 6, capacity=9, weight=5)
         G.add_edge(4, 't', capacity=3)
         G.add_edge(5, 't', capacity=7)
         G.add_edge(6, 't', capacity=22)
         flow = nx.max_flow_min_cost(G, 's', 't')
-        soln = {1: {2: 5, 4: 5, 5: 2},
-                2: {3: 6, 5: 3, 6: 2},
+        soln = {1: {2: 6, 4: 5, 5: 1},
+                2: {3: 6, 5: 4, 6: 2},
                 3: {6: 20},
                 4: {5: 2, 't': 3},
-                5: {5: 0, 't': 7},
+                5: {6: 0, 't': 7},
                 6: {'t': 22},
                 's': {1: 12, 2: 6, 3: 14},
                 't': {}}
@@ -183,7 +183,7 @@ class TestNetworkSimplex:
         admits multiple solutions, so I alter it a bit. From ticket #430
         by mfrasca."""
 
-        G = G = nx.DiGraph()
+        G = nx.DiGraph()
         G.add_edge('s', 'a', {0: 2, 1: 4})
         G.add_edge('s', 'b', {0: 2, 1: 1})
         G.add_edge('a', 'b', {0: 5, 1: 2})
@@ -201,4 +201,59 @@ class TestNetworkSimplex:
         assert_equal(sol['b'], {'a': 0, 't': 3})
         assert_equal(sol['t'], {})
 
+    def test_zero_capacity_edges(self):
+        """Address issue raised in ticket #617 by arv."""
+        G = nx.DiGraph()
+        G.add_edges_from([(1, 2, {'capacity': 1, 'weight': 1}),
+                          (1, 5, {'capacity': 1, 'weight': 1}),
+                          (2, 3, {'capacity': 0, 'weight': 1}),
+                          (2, 5, {'capacity': 1, 'weight': 1}),
+                          (5, 3, {'capacity': 2, 'weight': 1}),
+                          (5, 4, {'capacity': 0, 'weight': 1}),
+                          (3, 4, {'capacity': 2, 'weight': 1})])
+        G.node[1]['demand'] = -1
+        G.node[2]['demand'] = -1
+        G.node[4]['demand'] = 2
+
+        flowCost, H = nx.network_simplex(G)
+        soln = {1: {2: 0, 5: 1},
+                2: {3: 0, 5: 1},
+                3: {4: 2},
+                4: {},
+                5: {3: 2, 4: 0}}
+        assert_equal(flowCost, 6)
+        assert_equal(nx.min_cost_flow_cost(G), 6)
+        assert_equal(H, soln)
+        assert_equal(nx.min_cost_flow(G), soln)
+        assert_equal(nx.cost_of_flow(G, H), 6)
+
+    def test_digon(self):
+        """Check if digons are handled properly. Taken from ticket
+        #618 by arv."""
+        nodes = [(1, {}),
+                 (2, {'demand': -4}),
+                 (3, {'demand': 4}),
+                 ]
+        edges = [(1, 2, {'capacity': 3, 'weight': 600000}),
+                 (2, 1, {'capacity': 2, 'weight': 0}),
+                 (2, 3, {'capacity': 5, 'weight': 714285}),
+                 (3, 2, {'capacity': 2, 'weight': 0}),
+                 ]
+        G = nx.DiGraph(edges)
+        G.add_nodes_from(nodes)
+        flowCost, H = nx.network_simplex(G)
+        soln = {1: {2: 0},
+                2: {1: 0, 3: 4},
+                3: {2: 0}}
+        assert_equal(flowCost, 2857140)
+        assert_equal(nx.min_cost_flow_cost(G), 2857140)
+        assert_equal(H, soln)
+        assert_equal(nx.min_cost_flow(G), soln)
+        assert_equal(nx.cost_of_flow(G, H), 2857140)
+
+    def test_multidigraph(self):
+        """Raise an exception for multidigraph."""
+        G = nx.MultiDiGraph()
+        G.add_weighted_edges_from([(1, 2, 1), (2, 3, 2)], weight='capacity')
+        assert_raises(nx.NetworkXError, nx.network_simplex, G)
 

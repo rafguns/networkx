@@ -537,6 +537,7 @@ class MultiGraph(Graph):
         Notes
         -----
         Nodes in nbunch that are not in the graph will be (quietly) ignored.
+        For directed graphs this returns the out-edges.
 
         Examples
         --------
@@ -586,6 +587,7 @@ class MultiGraph(Graph):
         Notes
         -----
         Nodes in nbunch that are not in the graph will be (quietly) ignored.
+        For directed graphs this returns the out-edges.
 
         Examples
         --------
@@ -823,7 +825,7 @@ class MultiGraph(Graph):
 
         See Also
         --------
-        selfloop_nodes, number_of_selfloops
+        nodes_with_selfloops, number_of_selfloops
 
         Examples
         --------
@@ -941,11 +943,14 @@ class MultiGraph(Graph):
         bunch =self.nbunch_iter(nbunch)
         # create new graph and copy subgraph into it
         H = self.__class__()
+        # copy node and attribute dictionaries
+        for n in bunch:
+            H.node[n]=self.node[n]
         # namespace shortcuts for speed
         H_adj=H.adj
         self_adj=self.adj
         # add nodes and edges (undirected method)
-        for n in bunch:
+        for n in H:
             Hnbrs={}
             H_adj[n]=Hnbrs
             for nbr,edgedict in self_adj[n].items():
@@ -955,8 +960,5 @@ class MultiGraph(Graph):
                     ed=edgedict.copy()
                     Hnbrs[nbr]=ed
                     H_adj[nbr][n]=ed
-        # copy node and attribute dictionaries
-        for n in H:
-            H.node[n]=self.node[n]
         H.graph=self.graph
         return H

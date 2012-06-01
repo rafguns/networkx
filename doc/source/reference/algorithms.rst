@@ -9,6 +9,8 @@ Algorithms
 .. toctree::
    :maxdepth: 2
 
+   algorithms.approximation
+   algorithms.assortativity
    algorithms.bipartite
    algorithms.block
    algorithms.boundary
@@ -16,6 +18,7 @@ Algorithms
    algorithms.chordal
    algorithms.clique
    algorithms.clustering
+   algorithms.community
    algorithms.component
    algorithms.core
    algorithms.cycles
@@ -24,17 +27,19 @@ Algorithms
    algorithms.distance_regular
    algorithms.euler
    algorithms.flow
+   algorithms.graphical
+   algorithms.hierarchy
    algorithms.isolates
    algorithms.isomorphism
    algorithms.link_analysis
    algorithms.matching
-   algorithms.mixing
    algorithms.mis
    algorithms.mst
    algorithms.operators
-   algorithms.neighbor_degree
    algorithms.rich_club
    algorithms.shortest_paths
+   algorithms.simple_paths
+   algorithms.swap
    algorithms.traversal
    algorithms.vitality
 

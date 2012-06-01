@@ -42,6 +42,7 @@ Current-Flow Betweenness
 
    current_flow_betweenness_centrality 
    edge_current_flow_betweenness_centrality
+   approximate_current_flow_betweenness_centrality 
 
 
 Eigenvector
@@ -52,6 +53,18 @@ Eigenvector
    eigenvector_centrality
    eigenvector_centrality_numpy
 
+
+Communicability
+---------------
+.. autosummary::
+   :toctree: generated/
+
+   communicability
+   communicability_exp
+   communicability_centrality
+   communicability_centrality_exp
+   communicability_betweenness_centrality
+   estrada_index
 
 Load
 ----

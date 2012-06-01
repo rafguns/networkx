@@ -34,9 +34,10 @@ __all__ = ['read_gml', 'parse_gml', 'generate_gml', 'write_gml']
 
 import networkx as nx
 from networkx.exception import NetworkXError
-from networkx.utils import get_file_handle, is_string_like
+from networkx.utils import is_string_like, open_file
 
-	
+
+@open_file(0,mode='rb')
 def read_gml(path,encoding='UTF-8',relabel=False):
     """Read graph in GML format from path.
 
@@ -80,10 +81,8 @@ def read_gml(path,encoding='UTF-8',relabel=False):
     >>> nx.write_gml(G,'test.gml')
     >>> H=nx.read_gml('test.gml')
     """
-    fh=get_file_handle(path,'rb')
-    lines=(line.decode(encoding) for line in fh)
+    lines=(line.decode(encoding) for line in path)
     G=parse_gml(lines,relabel=relabel)
-    fh.close()
     return G
 
 def parse_gml(lines, relabel=True):
@@ -275,15 +274,24 @@ def generate_gml(G):
        ]
     """
     # recursively make dicts into gml brackets
-    dicttype=type({})
     def listify(d,indent,indentlevel):
         result='[ \n'
-        dicttype=type({})
         for k,v in d.items():
-            if type(v)==dicttype:
+            if type(v)==dict:
                 v=listify(v,indent,indentlevel+1)
-            result += indentlevel*indent+"%s %s\n"%(k,v)
+            result += (indentlevel+1)*indent + \
+                string_item(k,v,indentlevel*indent)+'\n'
         return result+indentlevel*indent+"]"
+
+    def string_item(k,v,indent):
+        # try to make a string of the data
+        if type(v)==dict: 
+            v=listify(v,indent,2)
+        elif is_string_like(v):
+            v='"%s"'%v
+        elif type(v)==bool:
+            v=int(v)
+        return "%s %s"%(k,v)
 
     # check for attributes or assign empty dict
     if hasattr(G,'graph_attr'):
@@ -304,11 +312,9 @@ def generate_gml(G):
         yield indent+"directed 1"
     # write graph attributes 
     for k,v in G.graph.items():
-        if type(v)==dicttype: 
-            v=listify(v,indent,2)
-        elif is_string_like(v):
-            v='"%s"'%v
-        yield indent+"%s %s"%(k,v)
+        if k == 'directed':
+            continue
+        yield indent+string_item(k,v,indent)
     # write nodes
     for n in G:
         yield indent+"node ["
@@ -316,37 +322,28 @@ def generate_gml(G):
         nid=G.node[n].get('id',next(count))
         node_id[n]=nid
         yield 2*indent+"id %s"%nid
-        label=G.node[n].pop('label',n)
+        label=G.node[n].get('label',n)
         if is_string_like(label):
             label='"%s"'%label
         yield 2*indent+'label %s'%label
         if n in G:
           for k,v in G.node[n].items():
-              if k=='id': continue
-              if type(v)==dicttype: 
-                  v=listify(v,indent,3)
-              elif is_string_like(v):
-                  v='"%s"'%v
-              yield 2*indent+"%s %s"%(k,v)
+              if k=='id' or k == 'label': continue
+              yield 2*indent+string_item(k,v,indent)
         yield indent+"]"
     # write edges
     for u,v,edgedata in G.edges_iter(data=True):
-        # try to guess what is on the edge and do something reasonable
         yield indent+"edge ["
         yield 2*indent+"source %s"%node_id[u]
         yield 2*indent+"target %s"%node_id[v]
         for k,v in edgedata.items():
             if k=='source': continue
             if k=='target': continue
-            if type(v)==dicttype: 
-                v=listify(v,indent,3)
-            elif is_string_like(v):
-                v='"%s"'%v
-            yield 2*indent+"%s %s"%(k,v)
+            yield 2*indent+string_item(k,v,indent)
         yield indent+"]"
     yield "]"
 
-
+@open_file(1,mode='wb')
 def write_gml(G, path):
     """
     Write the graph G in GML format to the file or file handle path.
@@ -390,10 +387,9 @@ def write_gml(G, path):
 
     >>> nx.write_gml(G,"test.gml.gz")
     """
-    fh=get_file_handle(path,mode='wb')
     for line in generate_gml(G):
         line+='\n'
-        fh.write(line.encode('latin-1'))
+        path.write(line.encode('latin-1'))
 
 
 # fixture for nose tests

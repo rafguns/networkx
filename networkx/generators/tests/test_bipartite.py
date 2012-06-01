@@ -141,14 +141,6 @@ class TestGeneratorsBipartite():
                       bipartite_preferential_attachment_graph, aseq, 0.5,
                       create_using=DiGraph())
 
-    """def test_random_regular_bipartite(self):
-        # FIXME: test this somehow
-        G=bipartite_random_regular_graph(2,12)
-        assert_equal(list(G.degree().values()),
-                [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4])
-        assert_true(is_bipartite(G))
-    """
-
     def test_bipartite_random_graph(self):
         n=10
         m=20
@@ -168,3 +160,17 @@ class TestGeneratorsBipartite():
         X,Y=nx.algorithms.bipartite.sets(G)
         assert_equal(set(range(n)),X)
         assert_equal(set(range(n,n+m)),Y)
+
+    def test_bipartite_gnmk_random_graph(self):
+        n = 10
+        m = 20
+        edges = 100
+        G = bipartite_gnmk_random_graph(n, m, edges)
+        assert_equal(len(G),30)
+        assert_true(is_bipartite(G))
+        X,Y=nx.algorithms.bipartite.sets(G)
+        print(X)
+        assert_equal(set(range(n)),X)
+        assert_equal(set(range(n,n+m)),Y)
+        assert_equal(edges, len(G.edges()))
+

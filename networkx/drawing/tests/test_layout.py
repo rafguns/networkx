@@ -1,15 +1,11 @@
-"""
-    Unit tests for layout functions.
-"""
-
+"""Unit tests for layout functions."""
 import sys
-
 from nose import SkipTest
 from nose.tools import assert_equal
-
 import networkx as nx
 
 class TestLayout(object):
+    numpy=1 # nosetests attribute, use nosetests -a 'not numpy' to skip test
     @classmethod
     def setupClass(cls):
         global numpy
@@ -17,8 +13,6 @@ class TestLayout(object):
             import numpy
         except ImportError:
             raise SkipTest('numpy not available.')
-        if sys.version_info[0] > 2:
-            raise SkipTest('Drawing not implemented for Python 3.x')
 
 
     def setUp(self):
@@ -59,11 +53,9 @@ class TestLayout(object):
         except ImportError:
             raise SkipTest('scipy not available.')
 
-        A=nx.to_scipy_sparse_matrix(self.Gs)
+        A=nx.to_scipy_sparse_matrix(self.Gs,dtype='f')
         pos=nx.drawing.layout._sparse_fruchterman_reingold(A)
         pos=nx.drawing.layout._sparse_spectral(A)
 
         pos=nx.drawing.layout._sparse_fruchterman_reingold(A,dim=3)
         assert_equal(pos.shape,(6,3))
-
-

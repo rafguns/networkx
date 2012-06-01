@@ -4,7 +4,28 @@ import os
 from nose.tools import *
 
 import networkx as nx
-from networkx.utils.decorators import open_file,require
+from networkx.utils.decorators import open_file,require,not_implemented_for
+
+def test_not_implemented_decorator():
+    @not_implemented_for('directed')
+    def test1(G):
+        pass
+    test1(nx.Graph())
+
+@raises(KeyError)
+def test_not_implemented_decorator_key():
+    @not_implemented_for('foo')
+    def test1(G):
+        pass
+    test1(nx.Graph())
+
+@raises(nx.NetworkXNotImplemented)
+def test_not_implemented_decorator_raise():
+    @not_implemented_for('graph')
+    def test1(G):
+        pass
+    test1(nx.Graph())
+
 
 def test_require_decorator1():
     @require('os','sys')
@@ -21,31 +42,31 @@ def test_require_decorator2():
 
 class TestOpenFileDecorator(object):
     def setUp(self):
-        self.text = ['Blah... ', 'BLAH ', "BLAH!!!!"]
-        self.fobj = tempfile.NamedTemporaryFile('w+', delete=False)
+        self.text = ['Blah... ', 'BLAH ', 'BLAH!!!!']
+        self.fobj = tempfile.NamedTemporaryFile('wb+', delete=False)
         self.name = self.fobj.name
 
     def write(self, path):
         for text in self.text:
-            path.write(text)
+            path.write(text.encode('ascii'))
 
     @open_file(1, 'r')
     def read(self, path):
         return path.readlines()[0]
 
     @staticmethod
-    @open_file(0, 'w')
+    @open_file(0, 'wb')
     def writer_arg0(path):
-        path.write('demo')
+        path.write('demo'.encode('ascii'))
 
-    @open_file(1, 'w+')
+    @open_file(1, 'wb+')
     def writer_arg1(self, path):
         self.write(path)
 
-    @open_file(2, 'w')
+    @open_file(2, 'wb')
     def writer_arg2default(self, x, path=None):
         if path is None:
-            fh = tempfile.NamedTemporaryFile(delete=False)
+            fh = tempfile.NamedTemporaryFile('wb+', delete=False)
             close_fh = True
         else:
             fh = path
@@ -57,10 +78,10 @@ class TestOpenFileDecorator(object):
             if close_fh:
                 fh.close()
 
-    @open_file(4, 'w')
+    @open_file(4, 'wb')
     def writer_arg4default(self, x, y, other='hello', path=None, **kwargs):
         if path is None:
-            fh = tempfile.NamedTemporaryFile(delete=False)
+            fh = tempfile.NamedTemporaryFile('wb+', delete=False)
             close_fh = True
         else:
             fh = path
@@ -72,11 +93,11 @@ class TestOpenFileDecorator(object):
             if close_fh:
                 fh.close()
 
-    @open_file('path', 'w')
+    @open_file('path', 'wb')
     def writer_kwarg(self, **kwargs):
         path = kwargs.get('path', None)
         if path is None:
-            fh = tempfile.NamedTemporaryFile(delete=False)
+            fh = tempfile.NamedTemporaryFile('wb+', delete=False)
             close_fh = True
         else:
             fh = path
@@ -87,7 +108,6 @@ class TestOpenFileDecorator(object):
         finally:
             if close_fh:
                 fh.close()
-
 
     def test_writer_arg0_str(self):
         self.writer_arg0(self.name)

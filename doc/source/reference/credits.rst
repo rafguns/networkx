@@ -1,8 +1,8 @@
 Credits
 -------
 
-NetworkX was originally written by Aric Hagberg, Dan Schult, and Pieter Swart
-with the help of many others.   
+NetworkX was originally written by Aric Hagberg, Dan Schult, and Pieter Swart,
+and has been developed with the help of many others.   
 
 Thanks to Guido van Rossum for the idea of using Python for
 implementing a graph data structure
@@ -61,12 +61,19 @@ Thanks especially to the following contributors:
    NetworkX core developer.
  - Paul McGuire improved the performance of the GML data parser.
  - Jesus Cerquides contributed the chordal graph algorithms.
- - Ben Edwards contributed tree generating functions and the rich club 
-   coefficient algorithm.
+ - Ben Edwards contributed tree generating functions, the rich club 
+   coefficient algorithm, and the graph product functions.
  - Jon Olav Vik contributed cycle finding algorithms.
  - Hugh Brown improved the words.py example from the n^2 algorithm.
- - Ben Reilly contributed the shapefile reader.
+ - Ben Reilly contributed the shapefile reader and writer.
  - Leo Lopes contributed the maximal independent set algorithm.
  - Jordi Torrents contributed the bipartite clustering, bipartite
-   node redundancy, square clustering, and other bipartite algorithms.
+   node redundancy, square clustering, other bipartite 
+   and articulation point algorithms.
  - Dheeraj M R contributed the distance-regular testing algorithm
+ - Franck Kalala contributed the subgraph_centrality and communicability  
+   algorithms
+ - Simon Knight improved the GraphML functions to handle yEd/yfiles data,
+   and to handle types correctly.
+ - Conrad Lee contributed the k-clique community finding algorithm.
+ - Sérgio Nery Simões wrote the function for finding all simple paths.

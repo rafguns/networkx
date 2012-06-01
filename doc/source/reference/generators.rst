@@ -106,13 +106,17 @@ Degree Sequence
    expected_degree_graph
    havel_hakimi_graph
    degree_sequence_tree
-   is_valid_degree_sequence_havel_hakimi
-   is_valid_degree_sequence_erdos_gallai
-   create_degree_sequence
-   double_edge_swap
-   connected_double_edge_swap
-   li_smax_graph
+   random_degree_sequence_graph
+
+Random Clustered
+----------------
+.. automodule:: networkx.generators.random_clustered
+
+.. autosummary::
+   :toctree: generated/
+
    random_clustered_graph
+
 
 Directed
 --------
@@ -159,8 +163,8 @@ Bipartite
    bipartite_reverse_havel_hakimi_graph
    bipartite_alternating_havel_hakimi_graph
    bipartite_preferential_attachment_graph
-   bipartite_random_regular_graph
    bipartite_random_graph
+   bipartite_gnmk_random_graph
 
 
 Line Graph

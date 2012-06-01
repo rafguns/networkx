@@ -4,11 +4,13 @@ from nose import SkipTest
 import networkx
 
 class TestFlowClosenessCentrality(object):
+    numpy=1 # nosetests attribute, use nosetests -a 'not numpy' to skip test
     @classmethod
     def setupClass(cls):
         global np
         try:
             import numpy as np
+            import scipy
         except ImportError:
             raise SkipTest('NumPy not available.')
         
